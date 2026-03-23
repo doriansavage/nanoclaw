@@ -20,36 +20,16 @@ const { chromium } = pkg;
 const FORM_URL = 'https://tally.so/r/J9LdGJ';
 
 const MESSAGES = [
-  "c'est trop tôt",
-  "j'étais en réunion toute la journée",
-  "mon micro ne marchait plus",
-  "j'avais un rendez-vous médical",
-  "je travaillais sur un deadline urgent",
-  "mon chat a débranché mon ordi",
-  "j'ai oublié, tout simplement",
-  "j'étais en congé",
-  "problème de connexion internet",
-  "je pensais que c'était annulé",
-  "j'étais au téléphone avec un client",
-  "je ne savais pas qu'il y avait un call",
-  "mon réveil n'a pas sonné",
-  "j'étais bloqué dans les transports",
-  "je faisais du pair programming",
-  "j'avais un autre call en même temps",
-  "je debuggais un incident en prod",
-  "j'étais en train de deployer",
-  "la flemme, honnêtement",
-  "je prenais un café, ça a duré",
-  "j'étais concentré sur un bug critique",
-  "je suis arrivé en retard ce matin",
-  "j'avais pas vu l'invite",
-  "mon ordi a planté juste avant",
-  "je finissais une PR urgente",
-  "j'étais en 1-1 avec mon manager",
-  "je testais en recette",
-  "j'avais la tête dans le code",
-  "je pensais que c'était optionnel",
-  "j'étais parti chercher un colis",
+  "mon IA a répondu au call à ma place et personne s'en est rendu compte",
+  "j'ai automatisé mon daily standup, du coup j'ai oublié que le call existait encore",
+  "ChatGPT m'a dit que le call était annulé. j'aurais pas dû lui faire confiance",
+  "mon bot Slack a accepté une réunion en même temps sans me prévenir",
+  "j'ai demandé à mon agent de me réveiller, il a décidé que je méritais de dormir",
+  "mon script cron a envoyé mon 'je suis en route' 3h trop tôt, j'ai recru que c'était fait",
+  "j'étais en train de debug une boucle infinie dans mon assistant, ça a duré 4h",
+  "mon copilot a auto-complété mon message d'excuse avant même que je rate le call",
+  "j'ai lancé une automatisation qui a répondu 'bien reçu' à tous mes messages, y compris l'invite",
+  "mon IA a résumé le call en 3 lignes, du coup j'ai cru que j'y étais",
 ];
 
 // --- Parse CLI args ---
@@ -61,14 +41,27 @@ function getArg(name, fallback) {
   return Number(args[idx + 1]) || fallback;
 }
 
-const COUNT = getArg('forever', false) ? Infinity : getArg('count', 10);
+const COUNT = Math.min(
+  getArg('forever', false) ? MESSAGES.length : getArg('count', 10),
+  MESSAGES.length,
+);
 const MIN_DELAY_S = getArg('min', 30);
 const MAX_DELAY_S = getArg('max', 120);
 const NO_CONFIRM = args.includes('--no-confirm');
 
 // --- Helpers ---
+// Shuffle and cycle through messages — never repeat until all have been used
+const shuffled = [...MESSAGES].sort(() => Math.random() - 0.5);
+let messageIndex = 0;
+
 function randomMessage() {
-  return MESSAGES[Math.floor(Math.random() * MESSAGES.length)];
+  const msg = shuffled[messageIndex];
+  messageIndex++;
+  if (messageIndex >= shuffled.length) {
+    console.log('\n   ⚠️  Tous les messages ont été utilisés, fin.');
+    process.exit(0);
+  }
+  return msg;
 }
 
 function randomDelay() {
